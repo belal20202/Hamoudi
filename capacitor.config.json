@@ -1,0 +1,22 @@
+{
+  "appId": "com.belalalnuaimi.hamoudiadventures",
+  "appName": "حمودي - رحلة البطل العربي",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "backgroundColor": "#0f0620",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 800,
+      "backgroundColor": "#0f0620",
+      "showSpinner": false
+    }
+  }
+}

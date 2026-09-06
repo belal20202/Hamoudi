@@ -1,0 +1,17 @@
+{
+  "name": "حمودي - رحلة البطل العربي",
+  "short_name": "حمودي",
+  "description": "لعبة منصات ثنائية الأبعاد عبر 10 عوالم عربية و100 مرحلة. تعمل بالكامل دون إنترنت.",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0f0620",
+  "theme_color": "#0f0620",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["games"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,79 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a1a4a"/>
+      <stop offset="55%" stop-color="#5a2a6a"/>
+      <stop offset="100%" stop-color="#c9752f"/>
+    </linearGradient>
+    <linearGradient id="domeShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a2550"/>
+      <stop offset="100%" stop-color="#201636"/>
+    </linearGradient>
+    <linearGradient id="vest" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffd76b"/>
+      <stop offset="100%" stop-color="#d4a017"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="34%" r="52%">
+      <stop offset="0%" stop-color="#ffe9a8" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ffe9a8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- full-bleed background -->
+  <rect x="0" y="0" width="512" height="512" fill="url(#sky)"/>
+
+  <!-- warm glow behind the hero -->
+  <circle cx="256" cy="220" r="185" fill="url(#glow)"/>
+
+  <!-- moon -->
+  <circle cx="388" cy="88" r="32" fill="#ffe9a8" opacity="0.9"/>
+
+  <!-- distant palace: two side minarets with real onion domes + a low
+       central archway (kept well below the hero so nothing overlaps) -->
+  <g fill="url(#domeShade)">
+    <!-- ground band -->
+    <rect x="0" y="418" width="512" height="94"/>
+
+    <!-- left minaret -->
+    <rect x="66" y="330" width="52" height="88"/>
+    <path d="M60 330 Q60 280 92 262 Q124 280 124 330 Z"/>
+    <rect x="88" y="240" width="8" height="24"/>
+    <circle cx="92" cy="236" r="5"/>
+
+    <!-- right minaret -->
+    <rect x="394" y="330" width="52" height="88"/>
+    <path d="M388 330 Q388 280 420 262 Q452 280 452 330 Z"/>
+    <rect x="416" y="240" width="8" height="24"/>
+    <circle cx="420" cy="236" r="5"/>
+  </g>
+
+  <!-- HERO: bold, simplified silhouette so it still reads at icon sizes -->
+  <g transform="translate(256,300)">
+    <!-- back arm (celebratory, raised straight up; reads clearly, no overlap) -->
+    <path d="M24 -34 Q46 -70 44 -118 L66 -120 Q70 -64 42 -20 Z" fill="#e0ac69"/>
+    <g transform="translate(58,-132) rotate(-8)">
+      <path d="M0 -19 L5.6 -5.9 L19 -5.9 L8.5 3.4 L12.3 17.1 L0 9 L-12.3 17.1 L-8.5 3.4 L-19 -5.9 L-5.6 -5.9 Z" fill="#ffd76b" stroke="#c9861a" stroke-width="2"/>
+    </g>
+
+    <!-- legs (mid-run pose) -->
+    <path d="M-26 58 L-40 118 L-16 118 L-2 66 Z" fill="#241a38"/>
+    <path d="M20 60 L32 118 L56 118 L32 58 Z" fill="#241a38"/>
+
+    <!-- torso / vest -->
+    <path d="M-34 -20 Q-34 -55 0 -55 Q34 -55 34 -20 L34 44 Q0 58 -34 44 Z" fill="url(#vest)"/>
+    <!-- sash -->
+    <rect x="-34" y="1" width="68" height="14" fill="#cf4b3c"/>
+
+    <!-- front arm (down and slightly forward) -->
+    <path d="M-34 -28 Q-58 -12 -62 26 L-44 28 Q-40 -2 -22 -16 Z" fill="#e0ac69"/>
+
+    <!-- neck + head -->
+    <rect x="-11" y="-66" width="22" height="18" fill="#e0ac69"/>
+    <circle cx="0" cy="-84" r="30" fill="#e0ac69"/>
+
+    <!-- fez / tarboosh -->
+    <path d="M-24 -100 Q-24 -132 0 -132 Q24 -132 24 -100 Z" fill="#cf4b3c"/>
+    <rect x="-24" y="-104" width="48" height="9" fill="#241a38"/>
+    <circle cx="0" cy="-132" r="5" fill="#241a38"/>
+  </g>
+</svg>

@@ -1,0 +1,25 @@
+{
+  "name": "hamoudi",
+  "version": "1.0.0",
+  "description": "حمودي - رحلة البطل العربي (Hamoudi - Journey of the Arabic Hero)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "cap:add:android": "npx cap add android",
+    "cap:sync": "npm run build && npx cap sync android",
+    "cap:open:android": "npx cap open android"
+  },
+  "dependencies": {
+    "phaser": "^3.80.1"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2"
+  }
+}
