@@ -56,6 +56,8 @@ export class TextureFactory {
     this.goalFlag(scene);
     this.particleStar(scene);
     this.uiButton(scene);
+    this.enemyProjectile(scene);
+    this.checkpointFlag(scene);
   }
 
   static generateBiomeTiles(scene: Phaser.Scene, biome: BiomeTheme): void {
@@ -198,7 +200,6 @@ export class TextureFactory {
     g.destroy();
   }
 
-
   private static enemySprite(scene: Phaser.Scene, key: string, color: number): void {
     if (scene.textures.exists(key)) return;
     const g = scene.add.graphics();
@@ -301,6 +302,28 @@ export class TextureFactory {
     g.lineStyle(2, 0xf5c542, 1);
     g.strokeRoundedRect(1, 1, 258, 58, 16);
     g.generateTexture("ui_button", 264, 66);
+    g.destroy();
+  }
+
+  private static enemyProjectile(scene: Phaser.Scene): void {
+    if (scene.textures.exists("enemy_projectile")) return;
+    const g = scene.add.graphics();
+    g.fillStyle(shade(0x2f8f6a, -10), 1);
+    g.fillCircle(6, 6, 6);
+    g.fillStyle(shade(0x2f8f6a, 25), 1);
+    g.fillCircle(4, 4, 2.5);
+    g.generateTexture("enemy_projectile", 12, 12);
+    g.destroy();
+  }
+
+  private static checkpointFlag(scene: Phaser.Scene): void {
+    if (scene.textures.exists("checkpoint_flag")) return;
+    const g = scene.add.graphics();
+    g.fillStyle(0x5a4a2a, 1);
+    g.fillRect(6, 0, 4, 60);
+    g.fillStyle(0x3fd1ff, 1);
+    g.fillTriangle(10, 4, 10, 24, 42, 14);
+    g.generateTexture("checkpoint_flag", 44, 60);
     g.destroy();
   }
 }
