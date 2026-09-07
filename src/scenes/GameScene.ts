@@ -8,9 +8,15 @@ import { Player } from "@/objects/Player";
 import { Enemy } from "@/objects/Enemy";
 import { Collectible } from "@/objects/Collectible";
 import { MovingPlatform } from "@/objects/MovingPlatform";
+import { Projectile } from "@/objects/Projectile";
 import { TouchControls } from "@/ui/TouchControls";
 import { UiStyle } from "@/ui/UiStyle";
 import type { LevelDefinition } from "@/types";
+
+interface GameSceneData {
+  levelId: number;
+  checkpointX?: number;
+}
 
 export class GameScene extends Phaser.Scene {
   private level!: LevelDefinition;
@@ -21,6 +27,7 @@ export class GameScene extends Phaser.Scene {
   private enemies: Enemy[] = [];
   private collectibles: Collectible[] = [];
   private movingPlatforms: MovingPlatform[] = [];
+  private projectiles: Projectile[] = [];
   private touchControls!: TouchControls;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private keySpace!: Phaser.Input.Keyboard.Key;
@@ -31,6 +38,15 @@ export class GameScene extends Phaser.Scene {
   private elapsedMs = 0;
   private isLevelOver = false;
 
+  // The furthest checkpoint reached this attempt. Starts at the level's own
+  // spawn point; updated when the player reaches the mid-level checkpoint
+  // flag. Carried forward into the next attempt's scene data on death, so
+  // retrying a long level doesn't mean walking the whole thing again.
+  private checkpointX = 0;
+  private checkpointReached = false;
+  private pendingCheckpointZone?: Phaser.GameObjects.Zone;
+  private pendingCheckpointX = 0;
+
   private coinsText!: Phaser.GameObjects.Text;
   private timeText!: Phaser.GameObjects.Text;
   private livesText!: Phaser.GameObjects.Text;
@@ -39,7 +55,7 @@ export class GameScene extends Phaser.Scene {
     super("Game");
   }
 
-  init(data: { levelId: number }): void {
+  init(data: GameSceneData): void {
     this.level = LevelGenerator.generate(data.levelId);
     this.coinsCollected = 0;
     this.enemiesDefeated = 0;
@@ -48,6 +64,13 @@ export class GameScene extends Phaser.Scene {
     this.enemies = [];
     this.collectibles = [];
     this.movingPlatforms = [];
+    this.projectiles = [];
+    this.checkpointReached = false;
+
+    if (data.checkpointX && data.checkpointX > this.level.playerStart.x) {
+      this.level.playerStart.x = data.checkpointX;
+    }
+    this.checkpointX = this.level.playerStart.x;
   }
 
   create(): void {
@@ -59,6 +82,7 @@ export class GameScene extends Phaser.Scene {
     TextureFactory.generateBiomeTiles(this, this.level.biome);
     this.buildBackground();
     this.buildWorld();
+    this.buildCheckpoint();
     this.buildPlayer();
     this.buildEnemiesAndItems();
     this.buildHud();
@@ -159,6 +183,45 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.existing(this.goalZone, true);
   }
 
+  /**
+   * Places a single checkpoint roughly halfway through the level, snapped
+   * to whatever ground row actually exists at that column (levels have
+   * varying elevation, so this can't just assume a fixed row). Skipped
+   * entirely if the player already checkpointed past this point on a prior
+   * attempt (their spawn is already at/after it).
+   */
+  private buildCheckpoint(): void {
+    const midCol = Math.floor(this.level.gridWidth / 2);
+    let bestTile: { x: number; y: number } | null = null;
+    let bestDist = Infinity;
+    for (const tile of this.level.tiles) {
+      if (tile.type !== "ground") continue;
+      const dist = Math.abs(tile.x - midCol);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestTile = tile;
+      }
+    }
+    if (!bestTile) return;
+
+    const size = this.level.tileSize;
+    const flagX = bestTile.x * size + size / 2;
+    const flagY = bestTile.y * size;
+
+    // Already spawning at/after this point (a previous attempt already
+    // reached it) -- don't show a flag for a checkpoint already behind us.
+    if (this.level.playerStart.x >= flagX - size) return;
+
+    this.add.image(flagX, flagY, "checkpoint_flag").setOrigin(0.5, 1).setDepth(6).setAlpha(0.85);
+    const zone = this.add.zone(flagX, flagY - 20, 36, 60);
+    this.physics.add.existing(zone, true);
+
+    // this.player doesn't exist yet (buildPlayer() runs right after this) --
+    // the actual overlap is wired up there instead, using these two fields.
+    this.pendingCheckpointZone = zone;
+    this.pendingCheckpointX = flagX;
+  }
+
   private buildPlayer(): void {
     this.player = new Player(this, this.level.playerStart.x, this.level.playerStart.y);
     this.physics.world.gravity.y = PHYSICS.gravityY;
@@ -166,6 +229,29 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.groundGroup, undefined, undefined, this);
     this.physics.add.overlap(this.player, this.hazardGroup, () => this.onPlayerHazard(), undefined, this);
     this.physics.add.overlap(this.player, this.goalZone, () => this.onLevelComplete(), undefined, this);
+
+    if (this.pendingCheckpointZone) {
+      const flagX = this.pendingCheckpointX;
+      this.physics.add.overlap(
+        this.player,
+        this.pendingCheckpointZone,
+        () => this.onCheckpointReached(flagX),
+        undefined,
+        this
+      );
+    }
+  }
+
+  private onCheckpointReached(flagX: number): void {
+    if (this.checkpointReached) return;
+    this.checkpointReached = true;
+    this.checkpointX = flagX;
+    AudioService.gem();
+    const toast = this.add
+      .text(this.player.x, this.player.y - 50, "✓ نقطة تفتيش", { ...UiStyle.small(), fontSize: "13px", color: "#3fd1ff" })
+      .setOrigin(0.5)
+      .setDepth(50);
+    this.tweens.add({ targets: toast, y: toast.y - 24, alpha: 0, duration: 900, ease: "Cubic.easeOut", onComplete: () => toast.destroy() });
   }
 
   private buildEnemiesAndItems(): void {
@@ -183,6 +269,21 @@ export class GameScene extends Phaser.Scene {
     for (const mp of this.movingPlatforms) {
       this.physics.add.collider(this.player, mp);
     }
+  }
+
+  private spawnProjectile(x: number, y: number, dir: 1 | -1): void {
+    const projectile = new Projectile(this, x, y, dir);
+    this.projectiles.push(projectile);
+    this.physics.add.collider(projectile, this.groundGroup, () => this.destroyProjectile(projectile));
+    this.physics.add.overlap(this.player, projectile, () => {
+      this.destroyProjectile(projectile);
+      this.onPlayerHazard();
+    });
+  }
+
+  private destroyProjectile(projectile: Projectile): void {
+    this.projectiles = this.projectiles.filter((p) => p !== projectile);
+    projectile.destroy();
   }
 
   private buildHud(): void {
@@ -243,6 +344,14 @@ export class GameScene extends Phaser.Scene {
     this.scene.launch("Pause", { levelId: this.level.id });
   }
 
+  /** Ledge probe used by walker enemies: is there solid ground at this world point? */
+  private hasGroundAt(x: number, y: number): boolean {
+    const bodies = this.physics.world.overlapRect(x, y, 4, 4, false, true);
+    return bodies.some((body: Phaser.Physics.Arcade.Body | Phaser.Physics.Arcade.StaticBody) =>
+      this.groundGroup.contains(body.gameObject as Phaser.GameObjects.GameObject)
+    );
+  }
+
   update(time: number, delta: number): void {
     if (this.isLevelOver) return;
 
@@ -272,8 +381,16 @@ export class GameScene extends Phaser.Scene {
 
     this.touchControls.consumeEdges();
 
-    for (const enemy of this.enemies) enemy.update();
+    for (const enemy of this.enemies) {
+      enemy.update((x, y) => this.hasGroundAt(x, y));
+      if (enemy.wantsToSpit(time)) {
+        this.spawnProjectile(enemy.x, enemy.y, enemy.facingDir);
+      }
+    }
     for (const mp of this.movingPlatforms) mp.update(delta / 1000);
+    for (const projectile of [...this.projectiles]) {
+      if (projectile.isExpired(time)) this.destroyProjectile(projectile);
+    }
 
     if (this.player.y > this.level.gridHeight * this.level.tileSize + 100) {
       this.onPlayerHazard();
@@ -313,6 +430,9 @@ export class GameScene extends Phaser.Scene {
   private onPlayerHazard(): void {
     if (this.isLevelOver) return;
     if (this.player.absorbHit()) return;
+    // A brief, sharp camera shake reads as real impact -- much more so than
+    // the sound effect alone -- without needing any new art or animation.
+    this.cameras.main.shake(180, 0.012);
     this.isLevelOver = true;
     AudioService.lose();
     this.showResultOverlay(false);
@@ -350,8 +470,18 @@ export class GameScene extends Phaser.Scene {
   }
 
   private showResultOverlay(won: boolean, stars: 0 | 1 | 2 | 3 = 0): void {
-    const cx = this.cameras.main.scrollX + DESIGN_WIDTH / 2;
-    const cy = this.cameras.main.scrollY + DESIGN_HEIGHT / 2;
+    // BUG FIX: every element below has setScrollFactor(0), meaning it's
+    // already positioned relative to the camera VIEWPORT, not the world.
+    // Adding this.cameras.main.scrollX/scrollY on top of that double-counted
+    // the camera's scroll -- the further into a level the camera had
+    // travelled (which, for a WIN, is basically always true since the goal
+    // sits at the end of the level), the further this entire overlay drifted
+    // off the right/bottom edge of the actual visible screen. That's why it
+    // could look like the win/lose notification "didn't appear": it was
+    // rendering, just far outside the viewport. Fixed by using the plain
+    // design-space center instead.
+    const cx = DESIGN_WIDTH / 2;
+    const cy = DESIGN_HEIGHT / 2;
 
     // Dim backdrop
     this.add.rectangle(cx, cy, DESIGN_WIDTH, DESIGN_HEIGHT, 0x000000, 0.65).setScrollFactor(0).setDepth(2000);
@@ -446,7 +576,7 @@ export class GameScene extends Phaser.Scene {
       AudioService.click();
       if (won && this.level.id < TOTAL_LEVELS) this.scene.start("Game", { levelId: this.level.id + 1 });
       else if (won) this.scene.start("MainMenu");
-      else this.scene.start("Game", { levelId: this.level.id });
+      else this.scene.start("Game", { levelId: this.level.id, checkpointX: this.checkpointX } satisfies GameSceneData);
     });
 
     const menuBtn = this.add
