@@ -2,14 +2,16 @@ import Phaser from "phaser";
 import { DESIGN_WIDTH, DESIGN_HEIGHT, GAME_TITLE, GAME_SUBTITLE, GAME_VERSION, GAME_YEAR, DEVELOPER_NAME, MADE_IN, TOTAL_LEVELS, WORLDS_COUNT } from "@/config";
 import { AudioService } from "@/services/AudioService";
 import { UiStyle } from "@/ui/UiStyle";
+import { AdService } from "@/services/AdService";
 
 const PRIVACY_POLICY_AR = `سياسة الخصوصية
 
-هذه اللعبة تعمل بالكامل دون اتصال بالإنترنت (Offline). لا نقوم بجمع أي بيانات شخصية، ولا نستخدم أي إعلانات خارجية أو أدوات تتبع، ولا نطلب أي صلاحيات خطرة على جهازك.
+بياناتك المحفوظة داخل اللعبة (تقدمك، العملات، الجواهر، المراحل المكتملة) تُحفظ محلياً على جهازك فقط، ولا نجمعها نحن ولا نرسلها لأي خادم خارجي. عند حذف التطبيق، تُحذف هذه البيانات تلقائياً من جهازك.
 
-يتم حفظ تقدمك (العملات، الجواهر، المراحل، الأزياء) محلياً على جهازك فقط داخل التطبيق، ولا يتم إرسال أي من هذه البيانات إلى أي خادم خارجي.
+تعرض اللعبة إعلانات عبر خدمة Google AdMob لدعم استمرار تطويرها مجاناً. لعرض إعلانات مناسبة، قد تجمع Google معرّف الإعلانات الخاص بجهازك وبيانات تقنية أساسية (مثل نوع الجهاز ونسخة نظام التشغيل)، وفق سياسة خصوصية Google الخاصة بذلك:
+https://policies.google.com/privacy
 
-عند حذف التطبيق، سيتم حذف جميع بيانات التقدم المحفوظة تلقائياً من جهازك.
+تحتاج اللعبة صلاحية الإنترنت حصراً لتحميل هذه الإعلانات — لا صلاحيات أخرى حساسة (كاميرا، موقع، جهات اتصال) مطلوبة أو مستخدمة.
 
 لأي استفسار حول الخصوصية، يرجى التواصل مع المطور: ${DEVELOPER_NAME}.`;
 
@@ -23,6 +25,7 @@ export class AboutScene extends Phaser.Scene {
   }
 
   create(): void {
+    void AdService.notifyPageView();
     this.cameras.main.setBackgroundColor(0x150a2a);
     this.add.text(DESIGN_WIDTH / 2, 50, "عن اللعبة", UiStyle.heading()).setOrigin(0.5);
 
@@ -72,7 +75,7 @@ export class AboutScene extends Phaser.Scene {
           "",
           `انطلق في رحلة حمودي عبر ${WORLDS_COUNT} عوالم عربية أصيلة و${TOTAL_LEVELS} مرحلة مليئة بالتحديات، اجمع العملات والجواهر، وواجه تنين مملكة حمودي في المرحلة الأخيرة!`,
           "",
-          "اللعبة تعمل بالكامل دون إنترنت ولا تحتوي على أي إعلانات أو مشتريات إجبارية."
+          "اللعبة مجانية بالكامل ولا تحتوي على أي مشتريات إجبارية."
         ].join("\n")
       );
       this.toggleBtn.setText("سياسة الخصوصية 🔒");
