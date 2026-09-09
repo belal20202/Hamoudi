@@ -5,6 +5,7 @@ import { SaveService } from "@/services/SaveService";
 import { UiStyle } from "@/ui/UiStyle";
 import { AudioService } from "@/services/AudioService";
 import { Hud } from "@/ui/Hud";
+import { AdService } from "@/services/AdService";
 
 export class LevelSelectScene extends Phaser.Scene {
   private worldIndex = 0;
@@ -16,6 +17,7 @@ export class LevelSelectScene extends Phaser.Scene {
   }
 
   create(): void {
+    void AdService.notifyPageView();
     this.worldIndex = 0;
     this.bgGraphics = this.add.graphics().setDepth(-10);
 
@@ -163,7 +165,6 @@ export class LevelSelectScene extends Phaser.Scene {
         box.on("pointerout", () => cardContainer.setScale(1));
         box.on("pointerup", () => {
           AudioService.click();
-          if (SaveService.get().lives <= 0) return;
           this.scene.start("Game", { levelId });
         });
       }
