@@ -2,12 +2,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-        Zero-dangerous-permissions manifest for Uptodown compliance.
-        This game is 100% offline: no network, storage, camera, mic, contacts,
-        location, or any runtime-dangerous permission is required or requested.
-        INTERNET is intentionally OMITTED since there are no ads, no analytics,
-        and no remote asset/audio loading (see TextureFactory / AudioService).
+        Zero-DANGEROUS-permissions manifest (Android's protection-level
+        distinction, not "zero permissions"). INTERNET and
+        ACCESS_NETWORK_STATE below are both classified by Android as
+        "normal" protection-level permissions -- they're auto-granted at
+        install time with no runtime prompt shown to the user, unlike
+        "dangerous" ones (camera, location, contacts, storage, etc.), none
+        of which this app requests. They're required here because the game
+        now shows AdMob ads, which need network access to fetch ad content --
+        that's the one thing that keeps this app from being 100% offline;
+        everything else (assets, audio, save data) still works exactly as
+        before with no network involved.
     -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -18,6 +26,12 @@
         android:theme="@style/AppTheme"
         android:hardwareAccelerated="true"
         android:usesCleartextTraffic="false">
+
+        <!-- Required by Google Mobile Ads SDK (AdMob). Must match the App ID
+             shown in your AdMob console under App settings. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-5228365175479710~9696242750" />
 
         <activity
             android:name=".MainActivity"
@@ -43,7 +57,5 @@
                 android:resource="@xml/file_paths" />
         </provider>
     </application>
-
-    <!-- No <uses-permission> entries: intentional, see note above. -->
 
 </manifest>
