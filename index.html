@@ -22,25 +22,54 @@
       touch-action: none;
     }
     #app {
-      width: 100vw; height: 100vh;
+      width: 100vw;
+      /* Reserved space for the AdMob bottom banner, if/once one is shown --
+         AdService.ts sets this CSS variable once it knows the banner's real
+         height, so the game canvas resizes to fit exactly above it instead
+         of the native banner view overlapping any gameplay/UI. Defaults to
+         0 (full height) whenever no banner is active, e.g. in a plain
+         browser dev build. */
+      height: calc(100vh - var(--admob-banner-height, 0px));
       display: flex; align-items: center; justify-content: center;
       position: fixed; inset: 0;
     }
     canvas { touch-action: none; }
     #boot-fallback {
       position: fixed; inset: 0; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; color: #f5c542;
-      font-size: 20px; text-align: center; gap: 12px; z-index: 0;
+      align-items: center; justify-content: center; text-align: center; gap: 14px;
+      z-index: 0;
+      background: radial-gradient(circle at 50% 35%, #3a2a5a 0%, #150a2a 70%, #0f0620 100%);
     }
+    #boot-logo {
+      font-size: 40px; font-weight: bold; color: #ffd76b;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      animation: boot-pulse 1.6s ease-in-out infinite;
+    }
+    #boot-subtitle { font-size: 13px; color: #cbb7ff; }
+    #boot-spinner {
+      width: 34px; height: 34px; margin-top: 6px;
+      border: 3px solid rgba(245,197,66,0.25);
+      border-top-color: #f5c542;
+      border-radius: 50%;
+      animation: boot-spin 0.9s linear infinite;
+    }
+    #boot-iraq {
+      position: fixed; bottom: 22px; left: 0; right: 0;
+      text-align: center; font-size: 12px; color: #e8e0ff; opacity: 0.85;
+    }
+    @keyframes boot-spin { to { transform: rotate(360deg); } }
+    @keyframes boot-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
   </style>
 </head>
 <body>
   <div id="app">
     <div id="boot-fallback">
-      <div>🕌 حمودي</div>
-      <div style="font-size:14px;color:#cbb7ff;">جاري تحميل اللعبة...</div>
+      <div id="boot-logo">حمودي</div>
+      <div id="boot-subtitle">رحلة البطل العربي</div>
+      <div id="boot-spinner"></div>
     </div>
   </div>
+  <div id="boot-iraq">🇮🇶 صنع في العراق</div>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
