@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!--
         Zero-DANGEROUS-permissions manifest (Android's protection-level
         distinction, not "zero permissions"). INTERNET and
         ACCESS_NETWORK_STATE below are both classified by Android as
-        "normal" protection-level permissions -- they're auto-granted at
+        "normal" protection-level permissions; they're auto-granted at
         install time with no runtime prompt shown to the user, unlike
         "dangerous" ones (camera, location, contacts, storage, etc.), none
         of which this app requests. They're required here because the game
-        now shows AdMob ads, which need network access to fetch ad content --
+        now shows AdMob ads, which need network access to fetch ad content;
         that's the one thing that keeps this app from being 100% offline;
         everything else (assets, audio, save data) still works exactly as
         before with no network involved.
@@ -27,11 +28,24 @@
         android:hardwareAccelerated="true"
         android:usesCleartextTraffic="false">
 
-        <!-- Required by Google Mobile Ads SDK (AdMob). Must match the App ID
-             shown in your AdMob console under App settings. -->
+        <!--
+            Required by Google Mobile Ads SDK (AdMob). Must match the App ID
+            shown in your AdMob console under App settings.
+
+            tools:replace="android:value" is required here: the Google
+            Mobile Ads SDK (pulled in transitively by
+            @capacitor-community/admob) bundles its OWN AndroidManifest.xml
+            with a placeholder APPLICATION_ID meta-data (Google's public test
+            ad app ID), so it can still initialize even if a developer
+            forgets to set a real one. When our manifest declares the same
+            meta-data key with our real ID, the manifest merger sees two
+            different values for one attribute and fails the build unless
+            explicitly told which one wins; this is that instruction.
+        -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-5228365175479710~9696242750" />
+            android:value="ca-app-pub-5228365175479710~9696242750"
+            tools:replace="android:value" />
 
         <activity
             android:name=".MainActivity"
