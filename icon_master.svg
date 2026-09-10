@@ -47,33 +47,44 @@
     <circle cx="420" cy="236" r="5"/>
   </g>
 
-  <!-- HERO: bold, simplified silhouette so it still reads at icon sizes -->
+  <!-- HERO: matches the actual in-game character construction exactly
+       (see TextureFactory.playerFrame's "idle" pose); white ghutra +
+       black agal band, gold vest, red sash, tan skin; not a generic
+       "Arabian hero" stand-in. Fine facial linework is intentionally
+       skipped here (unlike the in-game sprite) since it would vanish
+       entirely once this is downscaled to a 48px launcher icon; the bold
+       color-blocked silhouette is what actually needs to read at that size. -->
   <g transform="translate(256,300)">
-    <!-- back arm (celebratory, raised straight up; reads clearly, no overlap) -->
-    <path d="M24 -34 Q46 -70 44 -118 L66 -120 Q70 -64 42 -20 Z" fill="#e0ac69"/>
-    <g transform="translate(58,-132) rotate(-8)">
-      <path d="M0 -19 L5.6 -5.9 L19 -5.9 L8.5 3.4 L12.3 17.1 L0 9 L-12.3 17.1 L-8.5 3.4 L-19 -5.9 L-5.6 -5.9 Z" fill="#ffd76b" stroke="#c9861a" stroke-width="2"/>
-    </g>
-
-    <!-- legs (mid-run pose) -->
-    <path d="M-26 58 L-40 118 L-16 118 L-2 66 Z" fill="#241a38"/>
-    <path d="M20 60 L32 118 L56 118 L32 58 Z" fill="#241a38"/>
+    <!-- legs -->
+    <path d="M-22 62 L-34 118 L-12 118 L2 66 Z" fill="#241a38"/>
+    <path d="M18 62 L28 118 L52 118 L34 62 Z" fill="#241a38"/>
+    <!-- shoes -->
+    <path d="M-38 112 L-10 112 L-10 126 L-42 126 Z" fill="#1a1730"/>
+    <path d="M26 112 L54 112 L58 126 L26 126 Z" fill="#1a1730"/>
 
     <!-- torso / vest -->
-    <path d="M-34 -20 Q-34 -55 0 -55 Q34 -55 34 -20 L34 44 Q0 58 -34 44 Z" fill="url(#vest)"/>
+    <path d="M-34 -22 Q-34 -58 0 -58 Q34 -58 34 -22 L34 46 Q0 60 -34 46 Z" fill="url(#vest)"/>
+    <!-- vest shading, darker side (matches the in-game fake-3D fold) -->
+    <path d="M2 -58 Q34 -58 34 -22 L34 46 Q17 53 2 46 Z" fill="#c98a12" opacity="0.55"/>
     <!-- sash -->
-    <rect x="-34" y="1" width="68" height="14" fill="#cf4b3c"/>
+    <rect x="-34" y="-2" width="68" height="16" fill="#cf4b3c"/>
 
-    <!-- front arm (down and slightly forward) -->
-    <path d="M-34 -28 Q-58 -12 -62 26 L-44 28 Q-40 -2 -22 -16 Z" fill="#e0ac69"/>
+    <!-- arms -->
+    <path d="M-34 -30 Q-52 -18 -56 20 L-38 22 Q-34 -4 -18 -18 Z" fill="#e0ac69"/>
+    <path d="M34 -30 Q52 -18 56 20 L38 22 Q34 -4 18 -18 Z" fill="#e0ac69"/>
 
     <!-- neck + head -->
-    <rect x="-11" y="-66" width="22" height="18" fill="#e0ac69"/>
-    <circle cx="0" cy="-84" r="30" fill="#e0ac69"/>
+    <rect x="-11" y="-68" width="22" height="20" fill="#e0ac69"/>
+    <circle cx="0" cy="-88" r="32" fill="#e0ac69"/>
+    <!-- cheek shading -->
+    <path d="M14 -100 A32 32 0 0 1 14 -76 A20 20 0 0 0 14 -100 Z" fill="#c99456" opacity="0.5"/>
 
-    <!-- fez / tarboosh -->
-    <path d="M-24 -100 Q-24 -132 0 -132 Q24 -132 24 -100 Z" fill="#cf4b3c"/>
-    <rect x="-24" y="-104" width="48" height="9" fill="#241a38"/>
-    <circle cx="0" cy="-132" r="5" fill="#241a38"/>
+    <!-- ghutra (headscarf) + black agal band; same silhouette as the
+         actual in-game sprite's headwear, just scaled up for the icon -->
+    <path d="M-39 -104 L39 -104 L0 -142 Z" fill="#ffffff"/>
+    <path d="M4 -104 L39 -104 L0 -142 Z" fill="#e6e6e6"/>
+    <rect x="-39" y="-104" width="78" height="21" rx="6" fill="#ffffff"/>
+    <path d="M4 -104 h35 v21 h-35 z" fill="#e6e6e6"/>
+    <rect x="-39" y="-100" width="78" height="11" fill="#1a1a1a"/>
   </g>
 </svg>
