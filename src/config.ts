@@ -54,3 +54,21 @@ export const PHYSICS = {
 export const STARTING_LIVES = 5;
 export const MAX_LIVES = 9;
 export const LIFE_REGEN_MINUTES = 20;
+
+/**
+ * Shared UI palette: warm gold/amber/terracotta instead of the near-black
+ * purple used before, which read as gloomy/heavy for a kids-friendly hero
+ * platformer. Menu-level screens (main menu, level select, shop, pause)
+ * use this; GameScene itself keeps its per-biome sky gradients (those are
+ * already varied and colorful, not the "gloomy" screens being replaced).
+ */
+export const THEME = {
+  skyTop: 0xffc266, // warm gold
+  skyMid: 0xff9a56, // amber-orange
+  skyBottom: 0xe8632f, // terracotta
+  panelTop: 0x6a3f1f, // warm brown (replaces the old deep purple panels)
+  panelBottom: 0x4a2a14,
+  panelBorder: 0xf5c542, // gold accent, unchanged
+  textLight: "#fff6e6",
+  textMuted: "#ffe0b3"
+};
