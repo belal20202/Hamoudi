@@ -52,20 +52,16 @@ class AdServiceImpl {
 
   private async showBanner(): Promise<void> {
     try {
-      const { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents } = await import("@capacitor-community/admob");
+      const { AdMob, BannerAdSize, BannerAdPosition } = await import("@capacitor-community/admob");
 
-      // The banner is a native view drawn ON TOP of the WebView, not inside
-      // it — by default it can sit over whatever is already there. To keep
-      // it from covering any gameplay/UI, we reserve real space for it
-      // instead: once the plugin reports the banner's actual height, that
-      // height is written to a CSS variable that #app's height subtracts
-      // (see index.html), then a resize event nudges Phaser's Scale
-      // Manager to re-fit into the now-smaller area above the banner.
-      AdMob.addListener(BannerAdPluginEvents.SizeChanged, (info: { width: number; height: number }) => {
-        document.documentElement.style.setProperty("--admob-banner-height", `${info.height}px`);
-        window.dispatchEvent(new Event("resize"));
-      });
-
+      // Space for the banner is reserved up front, statically, in
+      // index.html's CSS (a fixed 60px) -- NOT resized dynamically here
+      // after Phaser has already booted. An earlier version of this method
+      // listened for the plugin's real reported height and resized #app on
+      // the fly, but that made Phaser's ENVELOP scale mode re-fit against a
+      // new container size mid-session, which visibly cropped/shifted the
+      // top of the screen (coin counter, pause button) upward. A single
+      // fixed reservation chosen up front avoids that whole class of bug.
       await AdMob.showBanner({
         adId: BANNER_AD_UNIT_ID,
         adSize: BannerAdSize.ADAPTIVE_BANNER,
