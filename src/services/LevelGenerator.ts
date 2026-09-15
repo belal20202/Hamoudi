@@ -60,6 +60,14 @@ export class LevelGenerator {
     const enemyChance = isTutorialLevel ? 0 : 0.06 + difficulty * 0.42;
     const hazardUnlockThreshold = 0.12; // hazards only start appearing once difficulty passes this
 
+    // A different ground enemy type takes the spotlight every 2 levels
+    // (walker -> hopper -> charger -> walker -> ...), so the game doesn't
+    // read as "just the same enemy re-skinned as obstacles" the whole way
+    // through -- spitter (ranged) still shows up on top of this as an
+    // occasional extra threat, independent of the rotation.
+    const groundEnemyPool = ["walker", "hopper", "charger"] as const;
+    const groundEnemyTypeForLevel = groundEnemyPool[Math.floor((levelId - 1) / 2) % groundEnemyPool.length];
+
     while (col < columns - 6) {
       const segmentRoll = rng.next();
 
@@ -76,7 +84,7 @@ export class LevelGenerator {
           enemies.push({
             x: col * TILE_SIZE,
             y: (groundRow - 1) * TILE_SIZE,
-            type: rng.pick(["walker", "spitter"] as const),
+            type: rng.chance(0.22) ? "spitter" : groundEnemyTypeForLevel,
             patrolRange: TILE_SIZE * rng.intRange(2, 4)
           });
         }
