@@ -1,10 +1,12 @@
 import Phaser from "phaser";
+import { Capacitor } from "@capacitor/core";
 import { DESIGN_WIDTH, DESIGN_HEIGHT, PHYSICS } from "@/config";
 import { BootScene } from "@/scenes/BootScene";
 import { MainMenuScene } from "@/scenes/MainMenuScene";
 import { LevelSelectScene } from "@/scenes/LevelSelectScene";
 import { GameScene } from "@/scenes/GameScene";
 import { PauseScene } from "@/scenes/PauseScene";
+import { ShopScene } from "@/scenes/ShopScene";
 import { AboutScene } from "@/scenes/AboutScene";
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -51,8 +53,31 @@ const config: Phaser.Types.Core.GameConfig = {
     LevelSelectScene,
     GameScene,
     PauseScene,
+    ShopScene,
     AboutScene
   ]
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+// Auto-pause gameplay when the app is backgrounded (home button, app
+// switcher, incoming call, etc.) -- without this, GameScene kept simulating
+// physics/enemies/timers while the player wasn't even looking, which is
+// both a battery drain and means they could come back to an unfair hit
+// they had no chance to react to.
+if (Capacitor.isNativePlatform()) {
+  void (async () => {
+    try {
+      const { App } = await import("@capacitor/app");
+      App.addListener("appStateChange", ({ isActive }: { isActive: boolean }) => {
+        if (isActive) return;
+        const gameScene = game.scene.getScene("Game") as GameScene | null;
+        if (gameScene && game.scene.isActive("Game")) {
+          gameScene.pauseForReason(false);
+        }
+      });
+    } catch (err) {
+      console.warn("[main] App lifecycle listener failed to attach:", err);
+    }
+  })();
+}
