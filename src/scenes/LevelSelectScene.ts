@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { DESIGN_WIDTH, DESIGN_HEIGHT, LEVELS_PER_WORLD, WORLDS_COUNT, TOTAL_LEVELS } from "@/config";
+import { DESIGN_WIDTH, DESIGN_HEIGHT, LEVELS_PER_WORLD, WORLDS_COUNT, TOTAL_LEVELS, THEME } from "@/config";
 import { BIOMES } from "@/services/GameData";
 import { SaveService } from "@/services/SaveService";
 import { UiStyle } from "@/ui/UiStyle";
@@ -64,15 +64,10 @@ export class LevelSelectScene extends Phaser.Scene {
 
   private paintBackground(biome: (typeof BIOMES)[number]): void {
     this.bgGraphics.clear();
-    this.bgGraphics.fillGradientStyle(biome.skyTop, biome.skyTop, 0x150a2a, 0x150a2a, 1);
+    this.bgGraphics.fillGradientStyle(biome.skyTop, biome.skyTop, THEME.skyBottom, THEME.skyBottom, 1);
     this.bgGraphics.fillRect(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
-    // faint themed dome silhouettes so each world tab feels distinct
-    this.bgGraphics.fillStyle(0x000000, 0.18);
-    for (let i = 0; i < 6; i++) {
-      const x = (i + 0.5) * (DESIGN_WIDTH / 6);
-      this.bgGraphics.fillCircle(x, DESIGN_HEIGHT - 30, 30);
-      this.bgGraphics.fillRect(x - 30, DESIGN_HEIGHT - 30, 60, 40);
-    }
+    // The row of circular dome silhouettes that used to run along the
+    // bottom was removed by request (read as clutter, not atmosphere).
   }
 
   private renderWorld(): void {
