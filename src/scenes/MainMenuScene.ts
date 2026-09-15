@@ -1,8 +1,9 @@
 import Phaser from "phaser";
-import { DESIGN_WIDTH, DESIGN_HEIGHT, GAME_TITLE, GAME_SUBTITLE, TOTAL_LEVELS, WORLDS_COUNT } from "@/config";
+import { DESIGN_WIDTH, DESIGN_HEIGHT, GAME_TITLE, GAME_SUBTITLE, TOTAL_LEVELS, WORLDS_COUNT, THEME } from "@/config";
 import { Hud } from "@/ui/Hud";
 import { UiStyle, makeMenuButton } from "@/ui/UiStyle";
 import { AudioService } from "@/services/AudioService";
+import { AdService } from "@/services/AdService";
 
 export class MainMenuScene extends Phaser.Scene {
   constructor() {
@@ -10,36 +11,53 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   create(): void {
+    void AdService.notifyPageView();
+
+    // Warm gold/amber/terracotta sky instead of the old near-black purple --
+    // no dome/circle decorations at the bottom (removed by request; they
+    // read as clutter more than atmosphere).
     const g = this.add.graphics();
-    g.fillGradientStyle(0x2a1a4a, 0x2a1a4a, 0x6a2a6a, 0x6a2a6a, 1);
+    g.fillGradientStyle(THEME.skyTop, THEME.skyTop, THEME.skyBottom, THEME.skyBottom, 1);
     g.fillRect(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
 
-    // decorative dome silhouettes
-    for (let i = 0; i < 5; i++) {
-      const x = 60 + i * 170;
-      g.fillStyle(0x1a0f30, 0.6);
-      g.fillCircle(x, DESIGN_HEIGHT - 70, 40);
-      g.fillRect(x - 40, DESIGN_HEIGHT - 70, 80, 70);
-    }
+    // Gentle sun glow behind the hero/title for warmth, no other clutter.
+    const glow = this.add.graphics().setDepth(-5);
+    glow.fillStyle(0xfff0c2, 0.35);
+    glow.fillCircle(DESIGN_WIDTH / 2, 100, 160);
 
-    // Slowly drifting, twinkling star field.
+    // Slowly drifting, twinkling star field stays -- it's atmosphere, not
+    // the "barriers/circles" clutter that was removed.
     const stars = this.add.particles(0, 0, "particle_star", {
       x: { min: 0, max: DESIGN_WIDTH },
       y: { min: -10, max: DESIGN_HEIGHT - 120 },
       lifespan: 4000,
       speedY: { min: 4, max: 12 },
-      scale: { min: 0.15, max: 0.5 },
-      alpha: { start: 0, end: 0.85 },
+      scale: { min: 0.12, max: 0.4 },
+      alpha: { start: 0, end: 0.5 },
       quantity: 1,
-      frequency: 220,
-      tint: [0xffffff, 0xf5c542, 0xcbb7ff]
+      frequency: 260,
+      tint: [0xffffff, 0xf5c542]
     });
-    stars.setDepth(-50);
+    stars.setDepth(-4);
 
     new Hud(this);
 
+    // Hero + title grouped close together as a single lockup instead of the
+    // character sitting far off to one side of the text.
+    const centerX = DESIGN_WIDTH / 2;
+    const hero = this.add.sprite(centerX - 78, 96, "player_idle").setScale(1.2).setDepth(5);
+    if (this.anims.exists("player-run")) hero.play("player-run");
+    this.tweens.add({
+      targets: hero,
+      y: hero.y - 4,
+      duration: 500,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut"
+    });
+
     const title = this.add
-      .text(DESIGN_WIDTH / 2, 82, GAME_TITLE, { ...UiStyle.title(), fontSize: "44px" })
+      .text(centerX + 18, 86, GAME_TITLE, { ...UiStyle.title(), fontSize: "46px" })
       .setOrigin(0.5)
       .setShadow(2, 2, "#000000", 4, true, true);
     this.tweens.add({
@@ -51,34 +69,22 @@ export class MainMenuScene extends Phaser.Scene {
       ease: "Sine.easeInOut"
     });
 
-    this.add.text(DESIGN_WIDTH / 2, 116, GAME_SUBTITLE, UiStyle.small()).setOrigin(0.5);
+    this.add.text(centerX, 128, GAME_SUBTITLE, { ...UiStyle.small(), color: "#5a2f0f" }).setOrigin(0.5);
     this.add
-      .text(DESIGN_WIDTH / 2, 134, `عبر ${WORLDS_COUNT} عوالم و${TOTAL_LEVELS} مرحلة`, { ...UiStyle.small(), fontSize: "12px" })
+      .text(centerX, 146, `عبر ${WORLDS_COUNT} عوالم و${TOTAL_LEVELS} مرحلة`, { ...UiStyle.small(), fontSize: "12px", color: "#6a3a15" })
       .setOrigin(0.5);
 
-    // Animated hero preview next to the title.
-    const hero = this.add.sprite(DESIGN_WIDTH / 2 - 130, 100, "player_idle").setScale(1.15).setDepth(5);
-    if (this.anims.exists("player-run")) hero.play("player-run");
-    this.tweens.add({
-      targets: hero,
-      y: hero.y - 4,
-      duration: 500,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut"
-    });
+    const items: { label: string; action: () => void }[] = [
+      { label: "▶ ابدأ اللعبة", action: () => this.scene.start("LevelSelect") },
+      { label: "المتجر 🛍️", action: () => this.scene.start("Shop") },
+      { label: "عن اللعبة ℹ️", action: () => this.scene.start("About") }
+    ];
 
-    // Only two entries, per the simplified menu: start playing, and about.
-    const playBtn = makeMenuButton(this, DESIGN_WIDTH / 2, 210, "▶ ابدأ اللعبة", () => {
-      AudioService.click();
-      this.scene.start("LevelSelect");
-    });
-    const aboutBtn = makeMenuButton(this, DESIGN_WIDTH / 2, 285, "عن اللعبة ℹ️", () => {
-      AudioService.click();
-      this.scene.start("About");
-    });
-
-    [playBtn, aboutBtn].forEach((btn, i) => {
+    items.forEach((item, i) => {
+      const btn = makeMenuButton(this, centerX, 200 + i * 68, item.label, () => {
+        AudioService.click();
+        item.action();
+      });
       const targetY = btn.y;
       btn.setY(targetY + 24);
       btn.setAlpha(0);
@@ -98,60 +104,31 @@ export class MainMenuScene extends Phaser.Scene {
   }
 
   /**
-   * A real designed badge instead of small footer text -- Iraqi flag colors
-   * drawn directly (not relying on the 🇮🇶 emoji, which several Android
-   * WebView/font combinations render as plain "IQ" letters instead of an
-   * actual flag), placed prominently under the menu buttons.
+   * Plain "صنع بالعراق" on a gold badge -- no flag-colored bands (the
+   * previous version), no developer credit line, both removed by request.
    */
   private buildMadeInIraqBadge(): void {
-    const y = DESIGN_HEIGHT - 46;
+    const y = DESIGN_HEIGHT - 34;
     const w = 190;
     const h = 34;
     const cx = DESIGN_WIDTH / 2;
 
     const badge = this.add.graphics().setDepth(6);
-    // soft shadow
-    badge.fillStyle(0x000000, 0.35);
+    badge.fillStyle(0x000000, 0.3);
     badge.fillRoundedRect(cx - w / 2 + 2, y - h / 2 + 3, w, h, 10);
-    // Iraqi flag tri-band (red / white / black) as the badge background
-    const bandH = h / 3;
-    badge.fillStyle(0xce1126, 1);
-    badge.fillRect(cx - w / 2, y - h / 2, w, bandH);
-    badge.fillStyle(0xffffff, 1);
-    badge.fillRect(cx - w / 2, y - h / 2 + bandH, w, bandH);
-    badge.fillStyle(0x000000, 1);
-    badge.fillRect(cx - w / 2, y - h / 2 + bandH * 2, w, bandH);
-    badge.lineStyle(2, 0xf5c542, 1);
+    badge.fillGradientStyle(0xffd76b, 0xffd76b, 0xd4a017, 0xd4a017, 1);
+    badge.fillRoundedRect(cx - w / 2, y - h / 2, w, h, 10);
+    badge.lineStyle(2, 0x8a5424, 0.6);
     badge.strokeRoundedRect(cx - w / 2, y - h / 2, w, h, 10);
 
-    // Mask the flag bands to rounded corners by drawing a rounded border on
-    // top in the background color at the very corners is overkill here --
-    // the gold stroke on top reads cleanly enough at this size in practice.
-
     this.add
-      .text(cx, y, "🇮🇶 صنع في العراق", {
+      .text(cx, y, "صنع بالعراق", {
         fontFamily: "Tahoma",
         fontSize: "16px",
-        color: "#ffffff",
+        color: "#3a1f0a",
         fontStyle: "bold"
       })
       .setOrigin(0.5)
-      .setDepth(7)
-      .setShadow(1, 1, "#000000", 3, true, true);
-
-    // A tiny persistent shimmer draws the eye without being distracting.
-    this.tweens.add({
-      targets: badge,
-      alpha: 0.85,
-      duration: 1400,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut"
-    });
-
-    // Footer credits stay small underneath.
-    this.add
-      .text(DESIGN_WIDTH / 2, DESIGN_HEIGHT - 12, "المطور: بلال النعيمي", { ...UiStyle.small(), fontSize: "10px" })
-      .setOrigin(0.5);
+      .setDepth(7);
   }
 }
