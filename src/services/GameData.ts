@@ -6,6 +6,7 @@ import type {
   AchievementDefinition
 } from "@/types";
 import { TOTAL_LEVELS } from "@/config";
+import { SeededRandom } from "@/services/Random";
 
 export const BIOMES: BiomeTheme[] = [
   {
@@ -125,14 +126,96 @@ export const BIOMES: BiomeTheme[] = [
   }
 ];
 
-export const OUTFITS: OutfitDefinition[] = [
-  { id: "default", nameAr: "الزي التقليدي", priceGold: 0, priceGems: 0, tint: 0xffffff },
-  { id: "desert_explorer", nameAr: "زي المستكشف الصحراوي", priceGold: 300, priceGems: 0, tint: 0xf2d78b },
-  { id: "castle_guard", nameAr: "زي حارس القلعة", priceGold: 500, priceGems: 0, tint: 0x8a8a92 },
-  { id: "night_ninja", nameAr: "زي النينجا الليلي", priceGold: 0, priceGems: 40, tint: 0x3d3d5c },
-  { id: "mountain_hero", nameAr: "زي بطل الجبال", priceGold: 0, priceGems: 60, tint: 0xdff0ff },
-  { id: "golden_king", nameAr: "زي الملك الذهبي", priceGold: 0, priceGems: 120, tint: 0xd4af37 }
-];
+/**
+ * 100 outfits, generated rather than hand-typed one by one -- each is still
+ * just a recolor of the same in-game character silhouette (this game draws
+ * everything procedurally, there's no per-outfit garment art), but the
+ * color palette and Arabic naming are systematic and deliberately varied
+ * rather than random noise. Deterministic (seeded), so this list is stable
+ * across app restarts and rebuilds.
+ *
+ * Structure: 1 free default + 54 gold-priced outfits (100 -> ~6000 gold,
+ * increasing) + 45 gem-priced "special" outfits (5 -> ~180 gems, increasing).
+ */
+function generateOutfits(): OutfitDefinition[] {
+  const outfits: OutfitDefinition[] = [
+    { id: "default", nameAr: "الزي التقليدي", priceGold: 0, priceGems: 0, tint: 0xffffff }
+  ];
+
+  const titlesGold = [
+    "المستكشف", "الفارس", "الحارس", "الصياد", "التاجر", "البدوي", "القائد",
+    "البطل", "الراوي", "الحكيم", "الملاح", "الفلاح", "الراعي", "الرحالة",
+    "الشجاع", "الوفي", "الكريم", "الأمين", "الجريء", "الصامد", "الطموح",
+    "النبيل", "الشهم", "الصادق", "الوثاب", "المغوار", "الظافر"
+  ];
+  const titlesGem = [
+    "السلطان", "الأمير", "الملك", "القائد الأعلى", "الأسطورة", "الفاتح",
+    "التاج", "الماسي", "الملكي", "الإمبراطور", "النجم", "الخالد", "المعجزة",
+    "الأسطوري", "الذهبي الأعظم", "البطل الخارق", "الفارس الملكي", "الحارس الأعلى"
+  ];
+  const colorNames: { nameAr: string; tint: number }[] = [
+    { nameAr: "الذهبي", tint: 0xf5c542 },
+    { nameAr: "الفضي", tint: 0xc9ccd1 },
+    { nameAr: "الأزرق", tint: 0x3f7fd1 },
+    { nameAr: "الأخضر", tint: 0x3f9f5c },
+    { nameAr: "الأحمر", tint: 0xcf4b3c },
+    { nameAr: "البنفسجي", tint: 0x8a5cc2 },
+    { nameAr: "الفيروزي", tint: 0x3fc2c2 },
+    { nameAr: "الوردي", tint: 0xe07fa0 },
+    { nameAr: "البرتقالي", tint: 0xe0812f },
+    { nameAr: "الأسود", tint: 0x3a3a42 },
+    { nameAr: "الأبيض", tint: 0xf0ece0 },
+    { nameAr: "الكهرماني", tint: 0xd4901a },
+    { nameAr: "الزمردي", tint: 0x2f9e6e },
+    { nameAr: "الياقوتي", tint: 0xb02040 },
+    { nameAr: "السماوي", tint: 0x6fc2e0 },
+    { nameAr: "الليلكي", tint: 0xb08fd8 },
+    { nameAr: "الرملي", tint: 0xd6b877 },
+    { nameAr: "الزيتي", tint: 0x7a8f3f }
+  ];
+
+  const rng = new SeededRandom(90210);
+
+  let goldPrice = 100;
+  for (let i = 0; i < 54; i++) {
+    const color = colorNames[i % colorNames.length];
+    const title = titlesGold[i % titlesGold.length];
+    outfits.push({
+      id: `gold_outfit_${i + 1}`,
+      nameAr: `زي ${title} ${color.nameAr}`,
+      priceGold: Math.round(goldPrice / 10) * 10,
+      priceGems: 0,
+      tint: shadeTint(color.tint, rng.range(-12, 12))
+    });
+    goldPrice += 90 + i * 8; // ramps from 100 up to roughly 6000
+  }
+
+  let gemPrice = 5;
+  for (let i = 0; i < 45; i++) {
+    const color = colorNames[(i + 5) % colorNames.length];
+    const title = titlesGem[i % titlesGem.length];
+    outfits.push({
+      id: `gem_outfit_${i + 1}`,
+      nameAr: `زي ${title} ${color.nameAr}`,
+      priceGold: 0,
+      priceGems: Math.max(5, Math.round(gemPrice)),
+      tint: shadeTint(color.tint, rng.range(-15, 15))
+    });
+    gemPrice += 3.8; // ramps from 5 up to roughly 180
+  }
+
+  return outfits;
+}
+
+function shadeTint(color: number, percent: number): number {
+  const r = (color >> 16) & 0xff;
+  const g = (color >> 8) & 0xff;
+  const b = color & 0xff;
+  const adjust = (c: number) => Math.max(0, Math.min(255, Math.round(c + (percent / 100) * 255)));
+  return (adjust(r) << 16) | (adjust(g) << 8) | adjust(b);
+}
+
+export const OUTFITS: OutfitDefinition[] = generateOutfits();
 
 export const POWERUPS: PowerupDefinition[] = [
   { id: "double_jump", nameAr: "القفزة المزدوجة", descriptionAr: "اقفز مرة إضافية في الهواء", priceGems: 30, maxLevel: 1 },
