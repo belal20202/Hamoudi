@@ -20,13 +20,13 @@ export const UiStyle = {
   body: (): Phaser.Types.GameObjects.Text.TextStyle => ({
     fontFamily: FONT_FAMILY,
     fontSize: "18px",
-    color: "#e8e0ff",
+    color: "#fff6e6",
     align: "center"
   }),
   small: (): Phaser.Types.GameObjects.Text.TextStyle => ({
     fontFamily: FONT_FAMILY,
     fontSize: "14px",
-    color: "#cbb7ff",
+    color: "#ffe0b3",
     align: "center"
   }),
   button: (): Phaser.Types.GameObjects.Text.TextStyle => ({
