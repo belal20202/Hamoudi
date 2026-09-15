@@ -23,13 +23,21 @@
     }
     #app {
       width: 100vw;
-      /* Reserved space for the AdMob bottom banner, if/once one is shown --
-         AdService.ts sets this CSS variable once it knows the banner's real
-         height, so the game canvas resizes to fit exactly above it instead
-         of the native banner view overlapping any gameplay/UI. Defaults to
-         0 (full height) whenever no banner is active, e.g. in a plain
-         browser dev build. */
-      height: calc(100vh - var(--admob-banner-height, 0px));
+      /* Fixed reservation for the AdMob bottom banner, set ONCE here before
+         Phaser ever boots -- not resized dynamically afterward. An earlier
+         version tried to resize #app AFTER the game had already started
+         (once AdService learned the real banner height), but Phaser's
+         ENVELOP scale mode recomputes its cover-zoom against the container
+         size, so a post-boot resize made it zoom in further and crop the
+         top of the screen -- exactly where the coin counter and pause
+         button live, making them look like they'd "risen up" and stopped
+         working. Reserving the space up front means Phaser only ever sees
+         one, stable container size and never needs to re-fit after boot.
+         60px comfortably covers AdMob's adaptive banner height range on
+         nearly all phone widths; a real device with a slightly shorter
+         banner just gets a couple of empty pixels above it, which is far
+         safer than any crop. */
+      height: calc(100vh - 60px);
       display: flex; align-items: center; justify-content: center;
       position: fixed; inset: 0;
     }
