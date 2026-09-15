@@ -38,7 +38,6 @@ export class GameScene extends Phaser.Scene {
   private touchControls!: TouchControls;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private keySpace!: Phaser.Input.Keyboard.Key;
-  private keyShift!: Phaser.Input.Keyboard.Key;
 
   private coinsCollected = 0;
   private enemiesDefeated = 0;
@@ -104,14 +103,12 @@ export class GameScene extends Phaser.Scene {
     g.fillGradientStyle(this.level.biome.skyTop, this.level.biome.skyTop, this.level.biome.skyBottom, this.level.biome.skyBottom, 1);
     g.fillRect(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
 
-    // parallax decor circles (sun/moon + distant domes)
+    // Sun/moon only -- the row of circular "dome" shapes that used to run
+    // along the bottom of the background was removed by request (it read
+    // as clutter/repeating barrier shapes rather than atmosphere).
     const decor = this.add.graphics().setScrollFactor(0.2).setDepth(-90);
     decor.fillStyle(this.level.biome.isNight ? 0xf5f0d8 : 0xfff3b0, 0.9);
     decor.fillCircle(DESIGN_WIDTH - 90, 70, 30);
-    decor.fillStyle(this.level.biome.decorColor, 0.5);
-    for (let i = 0; i < 8; i++) {
-      decor.fillCircle(i * 140 + 60, DESIGN_HEIGHT - 40, 26);
-    }
   }
 
   private buildWorld(): void {
@@ -290,7 +287,6 @@ export class GameScene extends Phaser.Scene {
     this.touchControls = new TouchControls(this);
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.keySpace = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.keyShift = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
   }
 
   private buildCamera(): void {
@@ -307,6 +303,19 @@ export class GameScene extends Phaser.Scene {
   private pauseToMenu(): void {
     if (this.isLevelOver) return;
     AudioService.click();
+    this.pauseForReason(true);
+  }
+
+  /**
+   * Shared by the manual pause button and the automatic
+   * app-backgrounded pause (see main.ts's App.addListener("appStateChange")
+   * handler) -- backgrounding the app mid-level must stop gameplay exactly
+   * like tapping pause does, not keep simulating physics/enemies/timers
+   * behind the scenes while the player isn't even looking.
+   */
+  pauseForReason(playClickSound: boolean): void {
+    if (this.isLevelOver || this.scene.isPaused()) return;
+    if (playClickSound) AudioService.click();
     this.scene.pause();
     this.scene.launch("Pause", { levelId: this.level.id });
   }
@@ -328,7 +337,6 @@ export class GameScene extends Phaser.Scene {
     const left = this.cursors.left.isDown || this.touchControls.state.left;
     const right = this.cursors.right.isDown || this.touchControls.state.right;
     const jump = Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.keySpace) || this.touchControls.state.jumpPressed;
-    const ability = Phaser.Input.Keyboard.JustDown(this.keyShift) || this.touchControls.state.abilityPressed;
 
     if (left && !right) this.player.moveLeft();
     else if (right && !left) this.player.moveRight();
@@ -342,7 +350,6 @@ export class GameScene extends Phaser.Scene {
     if (jump) this.player.requestJump();
     this.player.updateJumpState(time);
 
-    if (ability) this.player.tryAbility();
     this.player.updateWallSlide();
     this.player.updateAnimation();
 
