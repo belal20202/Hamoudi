@@ -5,7 +5,6 @@ export interface ControlState {
   left: boolean;
   right: boolean;
   jumpPressed: boolean; // edge-triggered, consumed each frame
-  abilityPressed: boolean;
 }
 
 /**
@@ -22,7 +21,7 @@ export interface ControlState {
  *      input held, exactly like native mobile game controls behave.
  */
 export class TouchControls {
-  state: ControlState = { left: false, right: false, jumpPressed: false, abilityPressed: false };
+  state: ControlState = { left: false, right: false, jumpPressed: false };
 
   constructor(scene: Phaser.Scene) {
     const y = DESIGN_HEIGHT - 66;
@@ -101,18 +100,16 @@ export class TouchControls {
       () => (this.state.right = false)
     );
 
-    // Action buttons (bottom-right)
-    makeZone(DESIGN_WIDTH - 64, 92, 92, "⤒", "34px", () => {
+    // Jump button (bottom-right) -- the dash/ability button that used to
+    // sit beside it was removed: with no shop path left to unlock the dash
+    // powerup, it never did anything, so it was just a confusing dead button.
+    makeZone(DESIGN_WIDTH - 74, 100, 100, "⤒", "36px", () => {
       this.state.jumpPressed = true;
-    });
-    makeZone(DESIGN_WIDTH - 166, 76, 76, "✦", "26px", () => {
-      this.state.abilityPressed = true;
     });
   }
 
-  /** Call once per frame after reading jump/ability edges */
+  /** Call once per frame after reading the jump edge */
   consumeEdges(): void {
     this.state.jumpPressed = false;
-    this.state.abilityPressed = false;
   }
 }
