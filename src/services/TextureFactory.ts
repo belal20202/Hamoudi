@@ -49,6 +49,8 @@ export class TextureFactory {
     this.enemySprite(scene, "enemy_walker", 0xcf4b3c);
     this.enemySprite(scene, "enemy_flyer", 0x7a4bcf);
     this.enemySprite(scene, "enemy_spitter", 0x2f8f6a);
+    this.enemySprite(scene, "enemy_hopper", 0xe0812f);
+    this.enemySprite(scene, "enemy_charger", 0x2f2f38);
     this.coin(scene);
     this.gem(scene);
     this.hazardSpike(scene);
@@ -293,11 +295,12 @@ export class TextureFactory {
     // drop shadow (offset dark rounded rect behind the button body)
     g.fillStyle(0x000000, 0.35);
     g.fillRoundedRect(3, 5, 260, 60, 16);
-    // gradient body (lighter top -> deeper purple bottom = subtle 3D bevel)
-    g.fillGradientStyle(0x4a3878, 0x4a3878, 0x2a1e48, 0x2a1e48, 1);
+    // gradient body (warm brown/amber bevel -- matches the app's new warm
+    // gold/terracotta theme instead of the old deep-purple scheme)
+    g.fillGradientStyle(0x8a5424, 0x8a5424, 0x5a350f, 0x5a350f, 1);
     g.fillRoundedRect(0, 0, 260, 60, 16);
     // top highlight sheen
-    g.fillStyle(0xffffff, 0.08);
+    g.fillStyle(0xffffff, 0.1);
     g.fillRoundedRect(4, 4, 252, 20, 12);
     g.lineStyle(2, 0xf5c542, 1);
     g.strokeRoundedRect(1, 1, 258, 58, 16);
