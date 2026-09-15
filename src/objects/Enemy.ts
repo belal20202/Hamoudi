@@ -3,6 +3,7 @@ import type { EnemySpawn } from "@/types";
 
 const SPIT_INTERVAL_MS = 2200;
 const SPIT_WARMUP_MS = 900; // grace period after spawn before the first shot
+const HOP_INTERVAL_MS = 1400;
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
   readonly kind: EnemySpawn["type"];
@@ -11,6 +12,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private dir: 1 | -1 = 1;
   private speed: number;
   private nextSpitAt: number;
+  private nextHopAt: number;
 
   constructor(scene: Phaser.Scene, spawn: EnemySpawn) {
     const key = `enemy_${spawn.type}`;
@@ -21,8 +23,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.kind = spawn.type;
     this.patrolOriginX = spawn.x;
     this.range = spawn.patrolRange;
-    this.speed = spawn.type === "flyer" ? 70 : 55;
+    // charger is the fast/aggressive variant; hopper/spitter/walker share a
+    // moderate pace, flyer is a little quicker to feel airborne.
+    this.speed = spawn.type === "flyer" ? 70 : spawn.type === "charger" ? 95 : 55;
     this.nextSpitAt = scene.time.now + SPIT_WARMUP_MS;
+    this.nextHopAt = scene.time.now + HOP_INTERVAL_MS;
     this.setDepth(9);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
@@ -40,10 +45,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   /**
-   * @param hasGroundAhead Optional ledge probe (walkers only): given a world
-   * point just ahead of the enemy's feet, returns whether solid ground is
-   * there. Passed in from GameScene, which owns the tile/ground group --
-   * keeps Enemy from needing to know about level geometry directly.
+   * @param hasGroundAhead Optional ledge probe (ground-based enemies only):
+   * given a world point just ahead of the enemy's feet, returns whether
+   * solid ground is there. Passed in from GameScene, which owns the
+   * tile/ground group -- keeps Enemy from needing to know about level
+   * geometry directly.
    */
   update(hasGroundAhead?: (x: number, y: number) => boolean): void {
     if (!this.active) return;
@@ -61,6 +67,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       if (!hasGroundAhead(probeX, probeY)) {
         this.dir = this.dir === 1 ? -1 : 1;
       }
+    }
+
+    if (this.kind === "hopper" && this.scene.time.now >= this.nextHopAt && body.blocked.down) {
+      body.setVelocityY(-360);
+      this.nextHopAt = this.scene.time.now + HOP_INTERVAL_MS;
     }
 
     if (this.x > this.patrolOriginX + this.range) this.dir = -1;
