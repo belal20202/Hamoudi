@@ -36,7 +36,7 @@ export interface LevelTile {
 export interface EnemySpawn {
   x: number;
   y: number;
-  type: "walker" | "flyer" | "spitter";
+  type: "walker" | "flyer" | "spitter" | "hopper" | "charger";
   patrolRange: number;
 }
 
