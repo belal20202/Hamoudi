@@ -6,6 +6,7 @@ import { AudioService } from "@/services/AudioService";
 import { UiStyle } from "@/ui/UiStyle";
 import { Hud } from "@/ui/Hud";
 import { AdService } from "@/services/AdService";
+import { Player } from "@/objects/Player";
 import type { OutfitDefinition } from "@/types";
 
 const PAGE_SIZE = 6; // 2 columns x 3 rows
@@ -57,7 +58,6 @@ export class ShopScene extends Phaser.Scene {
     previewPanel.fillStyle(0x000000, 0.15);
     previewPanel.fillRoundedRect(DESIGN_WIDTH / 2 - 60, 78, 120, 92, 14);
     this.previewSprite = this.add.sprite(DESIGN_WIDTH / 2, 130, "player_idle").setScale(2.2);
-    if (this.anims.exists("player-run")) this.previewSprite.play("player-run");
     this.previewNameText = this.add
       .text(DESIGN_WIDTH / 2, 176, "", { ...UiStyle.small(), fontSize: "13px", color: "#3a1f0a" })
       .setOrigin(0.5);
@@ -100,7 +100,9 @@ export class ShopScene extends Phaser.Scene {
 
   private updatePreview(outfitId: string): void {
     const outfit = OUTFITS.find((o) => o.id === outfitId) ?? OUTFITS[0];
-    this.previewSprite.setTint(outfit.tint);
+    const { idleKey, runAnimKey } = Player.ensureOutfitAnimation(this, outfit.id);
+    this.previewSprite.setTexture(idleKey);
+    this.previewSprite.play(runAnimKey);
     this.previewNameText.setText(outfit.nameAr);
   }
 
@@ -176,7 +178,6 @@ export class ShopScene extends Phaser.Scene {
         cardContainer.add(btn);
       }
 
-      // Tapping the card itself (not just the buy/equip button) previews it.
       const previewZone = this.add.zone(0, -10, 232, 50).setInteractive({ useHandCursor: true });
       previewZone.on("pointerup", () => this.updatePreview(outfit.id));
       cardContainer.add(previewZone);
@@ -186,7 +187,6 @@ export class ShopScene extends Phaser.Scene {
       this.tweens.add({ targets: cardContainer, scale: 1, alpha: 1, duration: 220, delay: i * 40, ease: "Back.easeOut" });
     });
 
-    // Pagination controls.
     const pagerY = DESIGN_HEIGHT - 22;
     const prevBtn = this.add
       .text(DESIGN_WIDTH / 2 - 60, pagerY, "◀", { ...UiStyle.body(), color: "#3a1f0a" })
