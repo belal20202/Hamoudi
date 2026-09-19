@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { TextureFactory } from "@/services/TextureFactory";
 import { SaveService } from "@/services/SaveService";
 import { AdService } from "@/services/AdService";
+import { Player } from "@/objects/Player";
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -15,18 +16,14 @@ export class BootScene extends Phaser.Scene {
     // must never block or delay the game from starting.
     void AdService.initialize();
 
-    // Registered once here (Phaser's AnimationManager is global to the whole
-    // Game instance, not per-scene) so it's ready for both gameplay AND the
-    // main menu's animated character preview, even before any level has
-    // ever been played. Player.ts also guards/re-checks this defensively.
-    if (!this.anims.exists("player-run")) {
-      this.anims.create({
-        key: "player-run",
-        frames: [{ key: "player_run_a" }, { key: "player_idle" }, { key: "player_run_b" }, { key: "player_idle" }],
-        frameRate: 9,
-        repeat: -1
-      });
-    }
+    // Pre-registers the "default" run animation (cheap: its textures already
+    // exist from generateAll() above) so the main menu's hero preview has it
+    // ready immediately. Any OTHER equipped outfit's animation/textures are
+    // generated lazily the first time Player.ensureOutfitAnimation() is
+    // called for it (Player itself, or a preview sprite in MainMenuScene /
+    // ShopScene) -- see that method for why generating all 100 outfits'
+    // frames upfront here would be wasteful.
+    Player.ensureOutfitAnimation(this, "default");
 
     SaveService.refreshDailyQuestsIfNeeded();
     document.getElementById("boot-fallback")?.remove();
