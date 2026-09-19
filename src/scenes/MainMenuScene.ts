@@ -4,6 +4,8 @@ import { Hud } from "@/ui/Hud";
 import { UiStyle, makeMenuButton } from "@/ui/UiStyle";
 import { AudioService } from "@/services/AudioService";
 import { AdService } from "@/services/AdService";
+import { SaveService } from "@/services/SaveService";
+import { Player } from "@/objects/Player";
 
 export class MainMenuScene extends Phaser.Scene {
   constructor() {
@@ -13,20 +15,14 @@ export class MainMenuScene extends Phaser.Scene {
   create(): void {
     void AdService.notifyPageView();
 
-    // Warm gold/amber/terracotta sky instead of the old near-black purple --
-    // no dome/circle decorations at the bottom (removed by request; they
-    // read as clutter more than atmosphere).
     const g = this.add.graphics();
     g.fillGradientStyle(THEME.skyTop, THEME.skyTop, THEME.skyBottom, THEME.skyBottom, 1);
     g.fillRect(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
 
-    // Gentle sun glow behind the hero/title for warmth, no other clutter.
     const glow = this.add.graphics().setDepth(-5);
     glow.fillStyle(0xfff0c2, 0.35);
     glow.fillCircle(DESIGN_WIDTH / 2, 100, 160);
 
-    // Slowly drifting, twinkling star field stays -- it's atmosphere, not
-    // the "barriers/circles" clutter that was removed.
     const stars = this.add.particles(0, 0, "particle_star", {
       x: { min: 0, max: DESIGN_WIDTH },
       y: { min: -10, max: DESIGN_HEIGHT - 120 },
@@ -42,11 +38,14 @@ export class MainMenuScene extends Phaser.Scene {
 
     new Hud(this);
 
-    // Hero + title grouped close together as a single lockup instead of the
-    // character sitting far off to one side of the text.
     const centerX = DESIGN_WIDTH / 2;
-    const hero = this.add.sprite(centerX - 78, 96, "player_idle").setScale(1.2).setDepth(5);
-    if (this.anims.exists("player-run")) hero.play("player-run");
+
+    // Shows whatever outfit the player currently has equipped (not always
+    // the default) via the same shared helper Player.ts itself uses.
+    const equippedOutfitId = SaveService.get().equippedOutfit;
+    const { idleKey, runAnimKey } = Player.ensureOutfitAnimation(this, equippedOutfitId);
+    const hero = this.add.sprite(centerX - 78, 96, idleKey).setScale(1.2).setDepth(5);
+    hero.play(runAnimKey);
     this.tweens.add({
       targets: hero,
       y: hero.y - 4,
