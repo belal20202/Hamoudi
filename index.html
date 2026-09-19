@@ -23,21 +23,20 @@
     }
     #app {
       width: 100vw;
-      /* Fixed reservation for the AdMob bottom banner, set ONCE here before
-         Phaser ever boots -- not resized dynamically afterward. An earlier
-         version tried to resize #app AFTER the game had already started
-         (once AdService learned the real banner height), but Phaser's
-         ENVELOP scale mode recomputes its cover-zoom against the container
-         size, so a post-boot resize made it zoom in further and crop the
-         top of the screen -- exactly where the coin counter and pause
-         button live, making them look like they'd "risen up" and stopped
-         working. Reserving the space up front means Phaser only ever sees
-         one, stable container size and never needs to re-fit after boot.
-         60px comfortably covers AdMob's adaptive banner height range on
-         nearly all phone widths; a real device with a slightly shorter
-         banner just gets a couple of empty pixels above it, which is far
-         safer than any crop. */
-      height: calc(100vh - 60px);
+      /* Deliberately ALWAYS 100vh, with no ad-related subtraction at all.
+         Two earlier attempts tried to reserve/resize space for the AdMob
+         banner (first dynamically after boot, then via a static -60px), and
+         both still let the game's rendering geometry react to the banner's
+         appearance in some way -- which is exactly the bug (Phaser's
+         ENVELOP scale mode re-fitting/cropping when its container appears
+         to change size). The robust fix is to stop coordinating with the
+         banner's real footprint at all: #app's size is now 100% independent
+         of ad state, so Phaser only ever sees ONE container size for the
+         entire app lifetime and never has anything to re-fit against. If a
+         banner is present, it overlays as a native view at the very bottom
+         edge; TouchControls.ts and the HUD keep a safe margin clear of that
+         edge specifically so nothing important ends up underneath it. */
+      height: 100vh;
       display: flex; align-items: center; justify-content: center;
       position: fixed; inset: 0;
     }
