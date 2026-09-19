@@ -54,14 +54,15 @@ class AdServiceImpl {
     try {
       const { AdMob, BannerAdSize, BannerAdPosition } = await import("@capacitor-community/admob");
 
-      // Space for the banner is reserved up front, statically, in
-      // index.html's CSS (a fixed 60px) -- NOT resized dynamically here
-      // after Phaser has already booted. An earlier version of this method
-      // listened for the plugin's real reported height and resized #app on
-      // the fly, but that made Phaser's ENVELOP scale mode re-fit against a
-      // new container size mid-session, which visibly cropped/shifted the
-      // top of the screen (coin counter, pause button) upward. A single
-      // fixed reservation chosen up front avoids that whole class of bug.
+      // #app's size is fixed at 100vh always (see index.html) and is never
+      // touched here. Two earlier approaches (post-boot dynamic resize,
+      // then a static pre-boot reservation) both still let Phaser's
+      // container size be influenced by the banner's presence in some way,
+      // which is what caused the "screen jumps / HUD rises up" bug --
+      // Phaser's ENVELOP scale mode re-fits (and crops) whenever it
+      // believes its container changed size. The robust fix is to never
+      // give it a reason to: the banner overlays as its own native layer
+      // and the game's geometry stays completely independent of it.
       await AdMob.showBanner({
         adId: BANNER_AD_UNIT_ID,
         adSize: BannerAdSize.ADAPTIVE_BANNER,
