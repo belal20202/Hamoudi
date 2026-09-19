@@ -3,6 +3,7 @@ import { PHYSICS } from "@/config";
 import { SaveService } from "@/services/SaveService";
 import { AudioService } from "@/services/AudioService";
 import { OUTFITS } from "@/services/GameData";
+import { TextureFactory } from "@/services/TextureFactory";
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   private hasDoubleJump = false;
@@ -11,6 +12,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private shieldCharges = 0;
   private dashCooldownUntil = 0;
   private invulnerableUntil = 0;
+  private equippedOutfitId = "default";
 
   // --- Movement feel state -------------------------------------------------
   // Instead of snapping straight to top speed, we track a "desired" direction
@@ -41,46 +43,72 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     (this.body as Phaser.Physics.Arcade.Body).setSize(22, 40).setOffset(4, 4);
     this.setDepth(10);
 
-    this.registerAnimations(scene);
     this.applyOutfit();
     this.applyPowerups();
   }
 
-  private registerAnimations(scene: Phaser.Scene): void {
-    // Registered once per game (Phaser's AnimationManager is global, not
-    // per-scene-instance), guarded so re-entering GameScene for a new level
-    // doesn't try to redefine the same keys.
-    if (!scene.anims.exists("player-run")) {
+  /**
+   * Shared by Player itself and any decorative preview sprite elsewhere
+   * (MainMenuScene's hero, ShopScene's live preview) that wants to show a
+   * given outfit correctly -- generates its texture frames if needed,
+   * registers its run animation if needed, and returns the keys to use.
+   * Keeping this one static method is what stops the "generate + register
+   * + key lookup" dance from being copy-pasted three times.
+   */
+  static ensureOutfitAnimation(scene: Phaser.Scene, outfitId: string): { idleKey: string; runAnimKey: string } {
+    const idleKey = TextureFactory.outfitFrameKey("player_idle", outfitId);
+    const runAnimKey = `player-run-${outfitId}`;
+    if (outfitId !== "default") {
+      const outfit = OUTFITS.find((o) => o.id === outfitId);
+      if (outfit) TextureFactory.generateOutfitFrames(scene, outfitId, outfit.tint);
+    }
+    if (!scene.anims.exists(runAnimKey)) {
+      const runAKey = TextureFactory.outfitFrameKey("player_run_a", outfitId);
+      const runBKey = TextureFactory.outfitFrameKey("player_run_b", outfitId);
       scene.anims.create({
-        key: "player-run",
-        frames: [{ key: "player_run_a" }, { key: "player_idle" }, { key: "player_run_b" }, { key: "player_idle" }],
+        key: runAnimKey,
+        frames: [{ key: runAKey }, { key: idleKey }, { key: runBKey }, { key: idleKey }],
         frameRate: 9,
         repeat: -1
       });
     }
+    return { idleKey, runAnimKey };
   }
 
   /** Call once per frame to keep the visible pose in sync with movement state. */
   updateAnimation(): void {
+    const idleKey = TextureFactory.outfitFrameKey("player_idle", this.equippedOutfitId);
+    const jumpKey = TextureFactory.outfitFrameKey("player_jump", this.equippedOutfitId);
+    const runAnimKey = `player-run-${this.equippedOutfitId}`;
+
     if (!this.onGround) {
       if (this.anims.isPlaying) this.stop();
-      this.setTexture("player_jump");
+      this.setTexture(jumpKey);
       return;
     }
     if (this.targetDirection !== 0) {
-      if (this.anims.currentAnim?.key !== "player-run" || !this.anims.isPlaying) {
-        this.play("player-run");
+      if (this.anims.currentAnim?.key !== runAnimKey || !this.anims.isPlaying) {
+        this.play(runAnimKey);
       }
     } else {
       if (this.anims.isPlaying) this.stop();
-      this.setTexture("player_idle");
+      this.setTexture(idleKey);
     }
   }
 
+  /**
+   * Outfits recolor ONLY clothing (vest/sash/pants/shoes) -- skin, face, and
+   * headwear are drawn identically for every outfit (see
+   * TextureFactory.playerFrame). This swaps to that outfit's own generated
+   * texture set/animation instead of tinting the whole sprite, which is
+   * what used to (wrongly) recolor skin along with the clothes.
+   */
   applyOutfit(): void {
     const equipped = SaveService.get().equippedOutfit;
     const outfit = OUTFITS.find((o) => o.id === equipped) ?? OUTFITS[0];
-    this.setTint(outfit.tint);
+    this.equippedOutfitId = outfit.id;
+    const { idleKey } = Player.ensureOutfitAnimation(this.scene, outfit.id);
+    this.setTexture(idleKey);
   }
 
   applyPowerups(): void {
