@@ -24,7 +24,12 @@ export class TouchControls {
   state: ControlState = { left: false, right: false, jumpPressed: false };
 
   constructor(scene: Phaser.Scene) {
-    const y = DESIGN_HEIGHT - 66;
+    // Kept a bit further from the very bottom edge than the raw minimum
+    // (was DESIGN_HEIGHT - 66) as a safety margin: if a device ever shows a
+    // slightly taller banner than expected, or any other bottom-edge native
+    // UI appears, the jump/D-pad buttons still have clear room and don't
+    // end up fought over with something else at the same pixels.
+    const y = DESIGN_HEIGHT - 88;
 
     const makeZone = (
       x: number,
