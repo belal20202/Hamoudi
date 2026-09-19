@@ -79,6 +79,13 @@ export interface OutfitDefinition {
   nameAr: string;
   priceGold: number;
   priceGems: number;
+  /**
+   * Colors ONLY the clothing (vest, sash, pants, shoes) on the generated
+   * per-outfit texture set -- see TextureFactory.playerFrame(). Skin, face,
+   * and the white ghutra/black agal headwear are always the same regardless
+   * of this value; it is not a whole-sprite tint (an earlier version of the
+   * game did apply it as one, which wrongly recolored skin too).
+   */
   tint: number;
 }
 
