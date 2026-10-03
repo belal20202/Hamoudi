@@ -1,0 +1,3 @@
+{"name":"hamoudi","version":"1.0.0","private":true,"description":"Hamoudi - Iraqi adventure game",
+"dependencies":{"@capacitor/android":"^6.1.0","@capacitor/cli":"^6.1.0","@capacitor/core":"^6.1.0"},
+"devDependencies":{"@capacitor/assets":"^3.0.5"}}
